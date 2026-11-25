@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Data</title>
+	</head>
+	<body>
+		<input id = "file" type = "file">
+		<br>
+		<button onclick ="download()">Download as text blob</button>
+		<a download = "cont.txt" id = "d"></a>
+	</body>
+	<script>
+		async function download(){
+			const fileInput = document.getElementById("file");
+			const file = await fileInput.files[0];
+			const buffer = await file.arrayBuffer();
+			const bytes = new Uint8Array(buffer);
+			let binary = "";
+			const chunkSize = 0x8000;
+			for(i = 0; i< bytes.length; i += chunkSize){
+				binary += String.fromCharCode(...bytes.subarray(i,i+chunkSize));
+			}
+			d=document.getElementById("d");
+			d.href = "data:text/plain," + btoa(binary);
+			d.download = Math.floor( Math.random() * 10000) + "Base64.txt";
+			d.click();
+		}
+	</script>
+</html>

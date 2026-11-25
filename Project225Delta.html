@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>225 Delta</title>
+		<style>
+body {
+	background-color:black;
+}
+#out {
+	background-color:black;
+	color:white;
+	font-size:17px;
+	font-family:monospace;
+}
+#in {
+	background-color:black;
+	outline:none;
+	border:none;
+	color:white;
+	padding-left:0px;
+	padding-right:0px;
+	padding-top:0px;
+	resize:none;
+	width:100%;
+	overflow:hidden;
+	font-size:17px;
+	font-family:monospace;
+}
+.info{
+	color:white;
+	font-size:17px;
+	font-family:monospace;
+}
+.error {
+	color:red;
+	font-size:17px;
+	font-family:monospace;
+}
+.warn {
+	color:yellow;
+	font-size:17px;
+	font-family:monospace;
+}
+.success {
+	color:green;
+	font-size:17px;
+	font-family:monospace;
+}
+.status {
+	color:cyan;
+	font-size:17px;
+	font-family:monospace;
+}
+		</style>
+	</head>
+	<body>
+		<pre id="out"></pre>
+		<input id="in">
+		<input id="fileInput" type="file" accept=".AA" style="display:none;">
+	</body>
+	<script>
+let scriptPack_JSZip = [
+	"https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.2/jszip.min.js",
+	"https://cdn.jsdelivr.net/npm/jszip@3.10.2/dist/jszip.min.js",
+	"https://unpkg.com/jszip@3.10.2/dist/jszip.min.js"
+]
+let scriptPack_CryptoJS = [
+	"https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js",
+	"https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.min.js",
+	"https://unpkg.com/crypto-js@4.2.0/crypto-js.js"
+]
+	</script>
+	<script>
+const key = "test";
+const uuid = "";
+var status;
+const input = document.getElementById("in");
+const output = document.getElementById("out");
+const fileInput = document.getElementById("fileInput");
+var status = null;
+var focusMode = 1;
+var allowCommand = true;
+var fileContent = null;
+var file = null;
+var stopExec = false;
+var hash = null;
+function generateUUID() {
+  return "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c =>
+    (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16)
+  );
+}
+input.onblur = () => {
+	if(focusMode == 0){
+		input.focus();
+	}
+}
+input.onfocus = () => {
+	if(focusMode == 1) {
+		input.blur();
+	}
+}
+document.body.onfocus = () => {
+	if(focusMode == 0) {
+		input.focus();
+	}
+}
+input.focus();
+
+log = {
+	info(msg) {
+		let l = document.createElement("pre");
+		l.innerHTML = msg;
+		l.className="info";
+		output.appendChild(l);
+		l=null;
+	},
+	error(msg) {
+		let l = document.createElement("pre");
+		l.innerHTML = msg;
+		l.className="error";
+		output.appendChild(l);
+		l=null;
+	},
+	warn(msg) {
+		let l = document.createElement("pre");
+		l.innerHTML = msg;
+		l.className="warn";
+		output.appendChild(l);
+		l=null;
+	},
+	success(msg) {
+		let l = document.createElement("pre");
+		l.innerHTML = msg;
+		l.className="success";
+		output.appendChild(l);
+		l=null;
+	},
+	status(msg) {
+		const l = document.createElement("pre");
+		l.innerHTML = msg;
+		l.className="status";
+		output.appendChild(l);
+		return l;
+	},
+	clear() {
+		output.innerHTML = "";
+	}
+}
+
+async function haltExecution(){
+	focusMode = null;
+	allowCommand = null;
+	fileContent = null;
+	file = null;
+	stopExec = null;
+	log = null;
+	input.onblur = null;
+	document.body.onfocus = null;
+	input.onfocus = null;
+	input.remove();
+	selectFile = null;
+	fileExtensionFormatTest = null;
+	importDependencies = null;
+	fileInput.remove();
+	openArchive = null;
+	command = null;
+	document.body.onkeypress = null;
+	document.title = "Fatal Error"
+	document.querySelector("script").remove();
+	generateUUID = null;
+	scriptPack_CryptoJS = null;
+	scriptPack_JSZip = null;
+	return 0;
+}
+
+async function selectFile() {
+	if(fileInput.files[0]){
+		file = await fileInput.files[0];
+	}else{
+		log.warn("User Needs To Select File");
+	}
+}
+
+async function fileExtensionFormatTest(){
+	if(fileInput.files[0]){
+		let name = file.name;
+		if(name.includes(".")){
+			if(name.split(".").length == 2){
+				log.clear();
+				log.success("File Extension Is Formatted Corectly");
+				log.info("Archive Name: " +name);
+				log.info("File Modified: "+file.lastModifiedDate.toDateString());
+				name=null;
+				//Contine Condition
+				
+			}else{
+				log.clear();
+				log.error("File Extension Format Error");
+				log.error("Reload Page To Try Again");
+				await haltExecution();
+			}
+		}else{
+			log.clear();
+			log.error("File Extension Format Error");
+			log.error("Reload Page To Try Again");
+			await haltExecution();
+		}
+	}else{
+		log.warn("User Needs To Select File!");
+	}
+}
+
+async function importDependencies(urlPack) {
+	const status = log.status("Awaiting Dependencies...");
+	if(urlPack.length > 0){
+		try {
+			var response = await fetch(urlPack.shift());
+			if(response.ok == false){
+				throw new Error("Tried:" + urlPack[0] + "; Status:" + response.status + ";Info:" + response.StatusText);
+			}
+			scriptContent = await response.text();
+			script = document.createElement("script");
+			script.textContent = scriptContent;
+			document.head.appendChild(script);
+			scriptContent = null;
+			script = null;
+			response = null;
+			status.className = "success";
+			status.innerText = "Fetched Dependency";
+			scriptContent = null;
+		} catch (Error) {
+			status.className = "error";
+			status.innerHTML = "Failed To Fetch Dependency";
+			await importDependencies(urlPack);
+		}
+	}else{
+		status.className = "error";
+		status.innerHTML = "Failed To Fetch All Dependencies";
+		log.error("Check Internet Connection And Try Again");
+		haltExecution();
+	}
+}
+
+async function checkIntegrityOfArchive() {
+	log.status("Checking Integrity Of The Archive...");
+	const buffer = await file.arrayBuffer();
+	const bytes = new Uint8Array(buffer);
+	let binary = "";
+	const chunkSize = 0x8000;
+	for(i = 0; i< bytes.length; i += chunkSize){
+		binary += String.fromCharCode(...bytes.subarray(i,i+chunkSize));
+	}
+	binary = btoa(binary);
+	const hasher = CryptoJS['SHA512'];
+	arr = CryptoJS.enc.Base64.parse(binary
+	);
+	hash = hasher(arr).toString(CryptoJS.enc.Hex);
+	log.info("Archive Hash:" + hash);
+}
+
+fileInput.addEventListener('change', async (event) => {
+	await selectFile();
+	await fileExtensionFormatTest();
+	log.info("Dependency For Unpacking Archive:")
+	await importDependencies(scriptPack_JSZip);
+	log.info("Dependency For Integrity Check Of Archive:");
+	await importDependencies(scriptPack_CryptoJS);
+	log.info("Archive Integrity Check:");
+	await checkIntegrityOfArchive();
+})
+
+openArchive = () => {
+	fileInput.click();
+}
+command = openArchive
+document.body.onkeypress = (e) => {
+	if(allowCommand == true){
+		if(e.charCode == 13){
+			command();
+			input.value = "";
+		}
+	}
+}
+
+log.info("Architect Archive Loader");
+log.info("Constructed By THE ARCHITECT");
+log.info("<br>");
+log.info("Press Enter Key To Select A Valid Architect Archive (.AA)");
+	</script>
+</html>
