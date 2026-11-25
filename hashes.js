@@ -4,3 +4,4 @@ const IntegrityHashList = [
 		version: "test"
 	}
 ]
+const LatestVersion = "V:0.0"

@@ -69,6 +69,9 @@ let scriptPack_CryptoJS = [
 	"https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/crypto-js.min.js",
 	"https://unpkg.com/crypto-js@4.2.0/crypto-js.js"
 ]
+let scriptPack_IntegrityCheck = [
+	"https://raw.githubusercontent.com/TheDarkWarrior115/Project225Delta/main/hashes.js"
+]
 	</script>
 	<script>
 const key = "test";
@@ -242,9 +245,10 @@ async function importDependencies(urlPack) {
 }
 
 async function checkIntegrityOfArchive() {
-	log.status("Checking Integrity Of The Archive...");
+	const status = log.status("Checking Integrity Of The Archive...");
 	const buffer = await file.arrayBuffer();
 	const bytes = new Uint8Array(buffer);
+	var hashMatch = false;
 	let binary = "";
 	const chunkSize = 0x8000;
 	for(i = 0; i< bytes.length; i += chunkSize){
@@ -256,6 +260,22 @@ async function checkIntegrityOfArchive() {
 	);
 	hash = hasher(arr).toString(CryptoJS.enc.Hex);
 	log.info("Archive Hash:" + hash);
+	for(i = 0; i < IntegrityHashList.length; i++){
+		let length = IntegrityHashList.length;
+		if(IntegrityHashList[i].hash == hash){
+			i = length;
+			status.className = "success";
+			status.innerHTML = "Imported Archive Hash Matches A Known Archive Hash";
+			hashMatch = true;
+			log.info("Archive Version: " + IntegrityHashList[i].version);
+		}
+		if(hashMatch == false){
+			status.className = "warn";
+			status.innerHTML = "Imported Archive Hash Does Not Match A Known Archive Hash";
+			log.warn("You May Continue With The Non Verified Archive")
+			log.warn("Please Note This Archive Is Not Official And THE ARCHITECT Is Not Responsible For The Consequences")
+		}
+	}
 }
 
 fileInput.addEventListener('change', async (event) => {
@@ -265,6 +285,8 @@ fileInput.addEventListener('change', async (event) => {
 	await importDependencies(scriptPack_JSZip);
 	log.info("Dependency For Integrity Check Of Archive:");
 	await importDependencies(scriptPack_CryptoJS);
+	log.info("Dependency For Integrity Comparison: ");
+	await importDependencies(scriptPack_IntegrityCheck);
 	log.info("Archive Integrity Check:");
 	await checkIntegrityOfArchive();
 })
